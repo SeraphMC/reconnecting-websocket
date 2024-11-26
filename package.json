@@ -1,0 +1,26 @@
+{
+  "name": "reconnecting-websocket",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A reconnecting websocket with typescript support",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "Clemintina",
+  "license": "LGPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/SeraphMC/reconnecting-websocket/issues"
+  },
+  "homepage": "https://github.com/SeraphMC/reconnecting-websocket#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeraphMC/reconnecting-websocket.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "pino": "^9.5.0",
+    "typescript": "^5.7.2"
+  }
+}
