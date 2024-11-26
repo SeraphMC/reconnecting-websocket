@@ -52,6 +52,7 @@ var ReconnectingWebSocket = /** @class */ (function (_super) {
         _this.maxReconnectAttempts = (_g = options.maxReconnectAttempts) !== null && _g !== void 0 ? _g : null;
         _this.binaryType = (_h = options.binaryType) !== null && _h !== void 0 ? _h : "blob";
         _this.logger = (_j = options.logger) !== null && _j !== void 0 ? _j : console;
+        _this.jsonStringifier = options.jsonStringifier;
         // Whether or not to create a websocket upon instantiation
         if (_this.automaticOpen) {
             _this.open(false);
@@ -86,6 +87,9 @@ var ReconnectingWebSocket = /** @class */ (function (_super) {
             }
             var timeout = Math.min(this.reconnectInterval * Math.pow(this.reconnectDecay, this.reconnectAttempts), this.maxReconnectInterval);
             setTimeout(function () {
+                if (_this.maxReconnectAttempts && _this.maxReconnectAttempts < _this.reconnectAttempts) {
+                    throw new Error("Too many attempts to reconnect. Giving up!");
+                }
                 _this.reconnectAttempts++;
                 _this.open(true);
             }, timeout);
@@ -160,7 +164,12 @@ var ReconnectingWebSocket = /** @class */ (function (_super) {
              * This ensures that any object passed to the WebSocket will be properly converted into a string before being sent over the connection.
              */
             if (typeof data === "object") {
-                data = JSON.stringify(data);
+                if (this.jsonStringifier) {
+                    data = this.jsonStringifier(data);
+                }
+                else {
+                    data = JSON.stringify(data);
+                }
             }
             this.ws.send(data);
         }
