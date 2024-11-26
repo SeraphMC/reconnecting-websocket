@@ -34,14 +34,14 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown>, Rec
 	private timedOut = false;
 	private logger: Logger | Console;
 
-	public debug: boolean;
-	public automaticOpen: boolean;
-	public reconnectInterval: number;
-	public maxReconnectInterval: number;
-	public reconnectDecay: number;
-	public timeoutInterval: number;
-	public maxReconnectAttempts: number | null;
-	public binaryType: BinaryType;
+	private readonly debug: boolean;
+	private readonly automaticOpen: boolean;
+	private readonly reconnectInterval: number;
+	private readonly maxReconnectInterval: number;
+	private readonly reconnectDecay: number;
+	private readonly timeoutInterval: number;
+	private readonly binaryType: BinaryType;
+	private readonly maxReconnectAttempts: number | null;
 
 	constructor(url: string, protocols?: string | string[], options: ReconnectingWebSocketOptions = {}) {
 		super();
@@ -96,6 +96,9 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown>, Rec
 			const timeout = Math.min(this.reconnectInterval * Math.pow(this.reconnectDecay, this.reconnectAttempts), this.maxReconnectInterval);
 
 			setTimeout(() => {
+				if (this.maxReconnectAttempts && this.maxReconnectAttempts < this.reconnectAttempts){
+					throw new Error("Too many attempts to reconnect. Giving up!")
+				}
 				this.reconnectAttempts++;
 				this.open(true);
 			}, timeout);

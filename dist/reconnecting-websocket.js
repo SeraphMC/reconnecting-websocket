@@ -1,4 +1,3 @@
-"use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -23,15 +22,13 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     }
     return to.concat(ar || Array.prototype.slice.call(from));
 };
-exports.__esModule = true;
-exports.ReconnectingWebSocket = exports.ConnectionType = void 0;
-var ConnectionType;
+export var ConnectionType;
 (function (ConnectionType) {
     ConnectionType[ConnectionType["CONNECTING"] = WebSocket.CONNECTING] = "CONNECTING";
     ConnectionType[ConnectionType["OPEN"] = WebSocket.OPEN] = "OPEN";
     ConnectionType[ConnectionType["CLOSING"] = WebSocket.CLOSING] = "CLOSING";
     ConnectionType[ConnectionType["CLOSED"] = WebSocket.CLOSED] = "CLOSED";
-})(ConnectionType = exports.ConnectionType || (exports.ConnectionType = {}));
+})(ConnectionType || (ConnectionType = {}));
 var ReconnectingWebSocket = /** @class */ (function (_super) {
     __extends(ReconnectingWebSocket, _super);
     function ReconnectingWebSocket(url, protocols, options) {
@@ -168,9 +165,7 @@ var ReconnectingWebSocket = /** @class */ (function (_super) {
             this.ws.send(data);
         }
         else {
-            throw new Error("Websocket is not ready or connected.", {
-                cause: "Ready state is not OPEN, Please wait before trying to send data to the socket."
-            });
+            throw new Error("Websocket is not ready or connected.");
         }
     };
     /**
@@ -212,4 +207,4 @@ var ReconnectingWebSocket = /** @class */ (function (_super) {
     };
     return ReconnectingWebSocket;
 }(EventTarget));
-exports.ReconnectingWebSocket = ReconnectingWebSocket;
+export { ReconnectingWebSocket };
