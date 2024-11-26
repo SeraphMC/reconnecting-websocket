@@ -10,6 +10,7 @@ type ReconnectingWebSocketOptions = {
 	maxReconnectAttempts?: number | null;
 	binaryType?: "blob" | "arraybuffer";
 	logger?: Logger | Console;
+	jsonStringifier?: (data: Record<string, unknown>) => string;
 };
 
 type ReconnectingWebsocketWebSocketEventMap<T extends keyof WebSocketEventMap> = WebSocketEventMap[T] & {
@@ -42,6 +43,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown>, Rec
 	private readonly timeoutInterval: number;
 	private readonly binaryType: BinaryType;
 	private readonly maxReconnectAttempts: number | null;
+	private readonly jsonStringifier?: (data: SendType) => string;
 
 	constructor(url: string, protocols?: string | string[], options: ReconnectingWebSocketOptions = {}) {
 		super();
@@ -57,6 +59,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown>, Rec
 		this.maxReconnectAttempts = options.maxReconnectAttempts ?? null;
 		this.binaryType = options.binaryType ?? "blob";
 		this.logger = options.logger ?? console;
+		this.jsonStringifier = options.jsonStringifier;
 
 		// Whether or not to create a websocket upon instantiation
 		if (this.automaticOpen) {
@@ -96,8 +99,8 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown>, Rec
 			const timeout = Math.min(this.reconnectInterval * Math.pow(this.reconnectDecay, this.reconnectAttempts), this.maxReconnectInterval);
 
 			setTimeout(() => {
-				if (this.maxReconnectAttempts && this.maxReconnectAttempts < this.reconnectAttempts){
-					throw new Error("Too many attempts to reconnect. Giving up!")
+				if (this.maxReconnectAttempts && this.maxReconnectAttempts < this.reconnectAttempts) {
+					throw new Error("Too many attempts to reconnect. Giving up!");
 				}
 				this.reconnectAttempts++;
 				this.open(true);
@@ -182,7 +185,11 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown>, Rec
 			 * This ensures that any object passed to the WebSocket will be properly converted into a string before being sent over the connection.
 			 */
 			if (typeof data === "object") {
-				data = JSON.stringify(data);
+				if (this.jsonStringifier) {
+					data = this.jsonStringifier(data as SendType);
+				} else {
+					data = JSON.stringify(data);
+				}
 			}
 			this.ws.send(data);
 		} else {
