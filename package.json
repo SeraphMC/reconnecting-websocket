@@ -20,14 +20,29 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "format": "prettier src --write"
   },
   "devDependencies": {
     "@types/ws": "^8.5.13",
+    "eslint": "^9.16.0",
+    "eslint-plugin-prettier": "^5.2.1",
     "pino": "^9.5.0",
+    "prettier": "^3.4.1",
     "typescript": "^5.7.2"
   },
   "dependencies": {
     "ws": "^8.18.0"
+  },
+  "prettier": {
+    "singleQuote": false,
+    "semi": true,
+    "trailingComma": "all",
+    "jsxSingleQuote": true,
+    "printWidth": 600,
+    "useTabs": true,
+    "bracketSpacing": true,
+    "proseWrap": "always",
+    "tabWidth": 4
   }
 }

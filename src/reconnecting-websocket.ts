@@ -13,13 +13,20 @@ type ReconnectingWebSocketOptions = Partial<{
 	jsonStringifier?: (data: Record<string, unknown>) => string;
 }>;
 
-type HeartbeatOptions = {
-	enabled: true
-	message: Record<string, unknown>
-	interval: number
-} | {
-	enabled: false
-}
+type HeartbeatOptions =
+	| {
+			enabled: true;
+			message: Record<string, unknown>;
+			interval: number;
+	  }
+	| {
+			enabled: false;
+	  };
+
+type QueueOptions = {
+	enabled: true;
+	limit: number;
+} | { enabled: false };
 
 export enum ConnectionType {
 	CONNECTING = WebSocket.CONNECTING,
@@ -28,10 +35,7 @@ export enum ConnectionType {
 	CLOSED = WebSocket.CLOSED,
 }
 
-export class ReconnectingWebSocket<
-	SendType extends Record<string, unknown> = Record<string, unknown>,
-	ReceiveType extends Record<string, unknown> = Record<string, unknown>
-> {
+export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Record<string, unknown>, ReceiveType extends Record<string, unknown> = Record<string, unknown>> {
 	public readonly url: string;
 	public reconnectAttempts = 0;
 	public readyState = ConnectionType.CONNECTING;
@@ -40,6 +44,7 @@ export class ReconnectingWebSocket<
 	private forcedClose = false;
 	private logger: Logger | Console;
 	private heartbeatInterval: NodeJS.Timeout | null = null;
+	private messageQueue = new Set<SendType>()
 
 	private readonly debug: boolean;
 	private readonly automaticOpen: boolean;
@@ -51,6 +56,7 @@ export class ReconnectingWebSocket<
 
 	private readonly websocketOptions?: ClientOptions;
 	private readonly heartbeatOptions?: HeartbeatOptions;
+	private readonly queueOptions?: QueueOptions;
 
 	private eventHandlers: {
 		message?: (data: ReceiveType) => void | Promise<void>;
@@ -60,11 +66,15 @@ export class ReconnectingWebSocket<
 		heartbeat?: () => void;
 	} = {};
 
-	constructor(url: string, options: Partial<{
-		reconnectOptions: ReconnectingWebSocketOptions;
-		websocketOptions: ClientOptions;
-		heartbeatOptions: HeartbeatOptions;
-	}> = {}) {
+	constructor(
+		url: string,
+		options: Partial<{
+			reconnectOptions: ReconnectingWebSocketOptions;
+			websocketOptions: ClientOptions;
+			heartbeatOptions: HeartbeatOptions;
+			queueOptions: QueueOptions;
+		}> = {},
+	) {
 		this.url = url;
 		this.debug = options?.reconnectOptions?.debug ?? false;
 		this.automaticOpen = options?.reconnectOptions?.automaticOpen ?? true;
@@ -77,6 +87,7 @@ export class ReconnectingWebSocket<
 
 		this.websocketOptions = options?.websocketOptions;
 		this.heartbeatOptions = options?.heartbeatOptions;
+		this.queueOptions = options?.queueOptions;
 
 		if (this.automaticOpen) {
 			this.open(false);
@@ -98,6 +109,7 @@ export class ReconnectingWebSocket<
 
 		this.logDebug(`WebSocket connected: ${this.url} (reconnectAttempt: ${reconnectAttempt})`);
 		this.eventHandlers.open?.(reconnectAttempt);
+		this.releaseQueue();
 	}
 
 	private handleClose() {
@@ -128,10 +140,7 @@ export class ReconnectingWebSocket<
 	private reconnect() {
 		this.readyState = ConnectionType.CONNECTING;
 
-		const timeout = Math.min(
-			this.reconnectInterval * Math.pow(this.reconnectDecay, this.reconnectAttempts),
-			this.maxReconnectInterval,
-		);
+		const timeout = Math.min(this.reconnectInterval * Math.pow(this.reconnectDecay, this.reconnectAttempts), this.maxReconnectInterval);
 
 		setTimeout(() => {
 			if (this.maxReconnectAttempts && this.maxReconnectAttempts <= this.reconnectAttempts) {
@@ -157,6 +166,9 @@ export class ReconnectingWebSocket<
 			const payload = this.jsonStringifier ? this.jsonStringifier(data) : JSON.stringify(data);
 			this.ws.send(payload);
 		} else {
+			if (this.queueOptions?.enabled) {
+				this.messageQueue.add(data)
+			}
 			throw new Error("WebSocket is not open. Unable to send message.");
 		}
 	}
@@ -180,6 +192,14 @@ export class ReconnectingWebSocket<
 		if (this.heartbeatInterval) {
 			clearInterval(this.heartbeatInterval);
 			this.heartbeatInterval = null;
+		}
+	}
+
+	private releaseQueue() {
+		if (this.queueOptions?.enabled){
+			for (const message of this.messageQueue) {
+				this.send(message)
+			}
 		}
 	}
 
