@@ -176,6 +176,14 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		}
 	}
 
+	public sendBytes(bytes: BinaryType) {
+		if (this.ws && this.readyState === ConnectionType.OPEN) {
+			this.ws.send(bytes);
+		} else {
+			throw new Error("WebSocket is not open. Unable to send message.");
+		}
+	}
+
 	public close() {
 		this.forcedClose = true;
 		this.ws?.close();
