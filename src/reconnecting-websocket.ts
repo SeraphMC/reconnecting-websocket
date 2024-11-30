@@ -234,7 +234,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		this.eventHandlers.heartbeat?.bind(handler);
 	}
 
-	public onUnexpectedResponse(handler: ()=> void | Promise<void>){
+	public onUnexpectedResponse(handler: (request:ClientRequest, response: IncomingMessage)=> void | Promise<void>){
 		this.eventHandlers.unexpectedResponse?.bind(handler)
 	}
 }
