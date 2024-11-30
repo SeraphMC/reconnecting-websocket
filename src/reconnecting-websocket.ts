@@ -188,7 +188,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		}
 	}
 
-	public sendBytes(bytes: BinaryType | Buffer) {
+	public sendBytes(bytes: Buffer | ArrayBuffer | ArrayBufferView) {
 		if (this.ws && this.readyState === ConnectionType.OPEN) {
 			this.ws.send(bytes);
 		} else {
