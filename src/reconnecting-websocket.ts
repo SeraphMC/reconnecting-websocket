@@ -168,7 +168,8 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 			this.ws.on("message", (data) => this.handleMessage(data));
 			this.ws.on("error", (error) => this.handleError(error));
 			this.ws.on("unexpected-response", (request, response) => this.eventHandlers.unexpectedResponse?.(request, response));
-		}}
+		}
+	}
 
 	public send(data: SendType) {
 		if (this.ws && this.readyState === ConnectionType.OPEN) {
@@ -244,9 +245,3 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		this.eventHandlers.unexpectedResponse?.bind(handler)
 	}
 }
-
-const ws = new ReconnectingWebSocket('',{
-	websocketOptions: {
-
-	}
-})
