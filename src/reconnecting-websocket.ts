@@ -1,7 +1,7 @@
 import { Logger } from "pino";
 import { ClientOptions, WebSocket } from "ws";
 
-type ReconnectingWebSocketOptions = {
+type ReconnectingWebSocketOptions = Partial<{
 	debug?: boolean;
 	automaticOpen?: boolean;
 	reconnectInterval?: number;
@@ -11,7 +11,15 @@ type ReconnectingWebSocketOptions = {
 	maxReconnectAttempts?: number | null;
 	logger?: Logger | Console;
 	jsonStringifier?: (data: Record<string, unknown>) => string;
-};
+}>;
+
+type HeartbeatOptions = {
+	enabled: true
+	message: Record<string, unknown>
+	interval: number
+} | {
+	enabled: false
+}
 
 export enum ConnectionType {
 	CONNECTING = WebSocket.CONNECTING,
@@ -30,19 +38,19 @@ export class ReconnectingWebSocket<
 
 	private ws: WebSocket | null = null;
 	private forcedClose = false;
-	private timedOut = false;
 	private logger: Logger | Console;
+	private heartbeatInterval: NodeJS.Timeout | null = null;
 
 	private readonly debug: boolean;
 	private readonly automaticOpen: boolean;
 	private readonly reconnectInterval: number;
 	private readonly maxReconnectInterval: number;
 	private readonly reconnectDecay: number;
-	private readonly timeoutInterval: number;
 	private readonly maxReconnectAttempts: number | null;
 	private readonly jsonStringifier?: (data: SendType) => string;
 
 	private readonly websocketOptions?: ClientOptions;
+	private readonly heartbeatOptions?: HeartbeatOptions;
 
 	private eventHandlers: {
 		message?: (data: ReceiveType) => void | Promise<void>;
@@ -54,6 +62,7 @@ export class ReconnectingWebSocket<
 	constructor(url: string, options: Partial<{
 		reconnectOptions: ReconnectingWebSocketOptions;
 		websocketOptions: ClientOptions;
+		heartbeatOptions: HeartbeatOptions;
 	}> = {}) {
 		this.url = url;
 		this.debug = options?.reconnectOptions?.debug ?? false;
@@ -61,14 +70,18 @@ export class ReconnectingWebSocket<
 		this.reconnectInterval = options?.reconnectOptions?.reconnectInterval ?? 1000;
 		this.maxReconnectInterval = options?.reconnectOptions?.maxReconnectInterval ?? 30000;
 		this.reconnectDecay = options?.reconnectOptions?.reconnectDecay ?? 1.5;
-		this.timeoutInterval = options?.reconnectOptions?.timeoutInterval ?? 2000;
 		this.maxReconnectAttempts = options?.reconnectOptions?.maxReconnectAttempts ?? null;
 		this.logger = options?.reconnectOptions?.logger ?? console;
 		this.jsonStringifier = options?.reconnectOptions?.jsonStringifier;
+
 		this.websocketOptions = options?.websocketOptions;
+		this.heartbeatOptions = options?.heartbeatOptions;
 
 		if (this.automaticOpen) {
 			this.open(false);
+		}
+		if (options.heartbeatOptions?.enabled) {
+			this.startHeartbeat();
 		}
 	}
 
@@ -150,6 +163,23 @@ export class ReconnectingWebSocket<
 	public close() {
 		this.forcedClose = true;
 		this.ws?.close();
+	}
+
+	private startHeartbeat() {
+		this.stopHeartbeat();
+		if (this.heartbeatOptions?.enabled == true) {
+			const {message, interval} = this.heartbeatOptions
+			this.heartbeatInterval = setInterval(() => {
+				this.send(message as SendType);
+			}, interval);
+		}
+	}
+
+	private stopHeartbeat() {
+		if (this.heartbeatInterval) {
+			clearInterval(this.heartbeatInterval);
+			this.heartbeatInterval = null;
+		}
 	}
 
 	public onMessage(handler: (data: ReceiveType) => void | Promise<void>) {
