@@ -14,6 +14,8 @@ type ReconnectingWebSocketOptions = Partial<{
 	jsonStringifier?: (data: Record<string, unknown>) => string;
 }>;
 
+type WebsocketClientOptions = Partial<{ binaryType?: WebSocket["binaryType"]; } & ClientOptions>
+
 type HeartbeatOptions =
 	| {
 	enabled: true;
@@ -55,7 +57,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 	private readonly maxReconnectAttempts: number | null;
 	private readonly jsonStringifier?: (data: SendType) => string;
 
-	private readonly websocketOptions?: ClientOptions;
+	private readonly websocketOptions?: WebsocketClientOptions;
 	private readonly heartbeatOptions?: HeartbeatOptions;
 	private readonly queueOptions?: QueueOptions;
 
@@ -72,7 +74,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		url: string,
 		options: Partial<{
 			reconnectOptions: ReconnectingWebSocketOptions;
-			websocketOptions: ClientOptions;
+			websocketOptions: WebsocketClientOptions;
 			heartbeatOptions: HeartbeatOptions;
 			queueOptions: QueueOptions;
 		}> = {},
@@ -157,12 +159,16 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		this.ws = new WebSocket(this.url, this.websocketOptions);
 		this.logDebug("Attempting to connect:", this.url);
 
-		this.ws?.on("open", () => this.handleOpen(reconnectAttempt));
-		this.ws?.on("close", () => this.handleClose());
-		this.ws?.on("message", (data) => this.handleMessage(data));
-		this.ws?.on("error", (error) => this.handleError(error));
-		this.ws?.on('unexpected-response', (request, response)=> this.eventHandlers.unexpectedResponse?.(request, response))
-	}
+		if (this.ws) {
+			if (this.websocketOptions?.binaryType){
+				this.ws.binaryType = this.websocketOptions?.binaryType;
+			}
+			this.ws.on("open", () => this.handleOpen(reconnectAttempt));
+			this.ws.on("close", () => this.handleClose());
+			this.ws.on("message", (data) => this.handleMessage(data));
+			this.ws.on("error", (error) => this.handleError(error));
+			this.ws.on("unexpected-response", (request, response) => this.eventHandlers.unexpectedResponse?.(request, response));
+		}}
 
 	public send(data: SendType) {
 		if (this.ws && this.readyState === ConnectionType.OPEN) {
@@ -238,3 +244,9 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		this.eventHandlers.unexpectedResponse?.bind(handler)
 	}
 }
+
+const ws = new ReconnectingWebSocket('',{
+	websocketOptions: {
+
+	}
+})
