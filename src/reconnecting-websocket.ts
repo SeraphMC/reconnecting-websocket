@@ -15,13 +15,13 @@ type ReconnectingWebSocketOptions = Partial<{
 
 type HeartbeatOptions =
 	| {
-			enabled: true;
-			message: Record<string, unknown>;
-			interval: number;
-	  }
+	enabled: true;
+	message: Record<string, unknown>;
+	interval: number;
+}
 	| {
-			enabled: false;
-	  };
+	enabled: false;
+};
 
 type QueueOptions = {
 	enabled: true;
@@ -44,7 +44,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 	private forcedClose = false;
 	private logger: Logger | Console;
 	private heartbeatInterval: NodeJS.Timeout | null = null;
-	private messageQueue = new Set<SendType>()
+	private messageQueue = new Set<SendType>();
 
 	private readonly debug: boolean;
 	private readonly automaticOpen: boolean;
@@ -166,8 +166,8 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 			const payload = this.jsonStringifier ? this.jsonStringifier(data) : JSON.stringify(data);
 			this.ws.send(payload);
 		} else {
-			if (this.queueOptions?.enabled) {
-				this.messageQueue.add(data)
+			if (this.queueOptions?.enabled && this.messageQueue.size < this.queueOptions.limit) {
+				this.messageQueue.add(data);
 			}
 			throw new Error("WebSocket is not open. Unable to send message.");
 		}
@@ -196,9 +196,9 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 	}
 
 	private releaseQueue() {
-		if (this.queueOptions?.enabled){
+		if (this.queueOptions?.enabled) {
 			for (const message of this.messageQueue) {
-				this.send(message)
+				this.send(message);
 			}
 		}
 	}
