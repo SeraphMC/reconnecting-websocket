@@ -1,5 +1,6 @@
 import { Logger } from "pino";
 import { ClientOptions, WebSocket } from "ws";
+import { ClientRequest, IncomingMessage } from "http";
 
 type ReconnectingWebSocketOptions = Partial<{
 	debug?: boolean;
@@ -64,6 +65,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		close?: (forced: boolean) => void;
 		error?: (error: Error) => void;
 		heartbeat?: () => void;
+		unexpectedResponse?: (request:ClientRequest, response: IncomingMessage)=>void;
 	} = {};
 
 	constructor(
@@ -155,10 +157,11 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		this.ws = new WebSocket(this.url, this.websocketOptions);
 		this.logDebug("Attempting to connect:", this.url);
 
-		this.ws.on("open", () => this.handleOpen(reconnectAttempt));
-		this.ws.on("close", () => this.handleClose());
-		this.ws.on("message", (data) => this.handleMessage(data));
-		this.ws.on("error", (error) => this.handleError(error));
+		this.ws?.on("open", () => this.handleOpen(reconnectAttempt));
+		this.ws?.on("close", () => this.handleClose());
+		this.ws?.on("message", (data) => this.handleMessage(data));
+		this.ws?.on("error", (error) => this.handleError(error));
+		this.ws?.on('unexpected-response', (request, response)=> this.eventHandlers.unexpectedResponse?.(request, response))
 	}
 
 	public send(data: SendType) {
@@ -221,5 +224,9 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 
 	public onHeartbeat(handler: () => void | Promise<void>) {
 		this.eventHandlers.heartbeat?.bind(handler);
+	}
+
+	public onUnexpectedResponse(handler: ()=> void | Promise<void>){
+		this.eventHandlers.unexpectedResponse?.bind(handler)
 	}
 }
