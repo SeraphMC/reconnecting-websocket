@@ -57,6 +57,7 @@ export class ReconnectingWebSocket<
 		open?: (reconnectAttempt: boolean) => void;
 		close?: (forced: boolean) => void;
 		error?: (error: Error) => void;
+		heartbeat?: () => void;
 	} = {};
 
 	constructor(url: string, options: Partial<{
@@ -168,7 +169,7 @@ export class ReconnectingWebSocket<
 	private startHeartbeat() {
 		this.stopHeartbeat();
 		if (this.heartbeatOptions?.enabled == true) {
-			const {message, interval} = this.heartbeatOptions
+			const { message, interval } = this.heartbeatOptions;
 			this.heartbeatInterval = setInterval(() => {
 				this.send(message as SendType);
 			}, interval);
@@ -183,18 +184,22 @@ export class ReconnectingWebSocket<
 	}
 
 	public onMessage(handler: (data: ReceiveType) => void | Promise<void>) {
-		this.eventHandlers.message = handler;
+		this.eventHandlers.message?.bind(handler);
 	}
 
 	public onOpen(handler: (reconnectAttempt: boolean) => void | Promise<void>) {
-		this.eventHandlers.open = handler;
+		this.eventHandlers.open?.bind(handler);
 	}
 
 	public onClose(handler: (forced: boolean) => void | Promise<void>) {
-		this.eventHandlers.close = handler;
+		this.eventHandlers.close?.bind(handler);
 	}
 
 	public onError(handler: (error: Error) => void | Promise<void>) {
-		this.eventHandlers.error = handler;
+		this.eventHandlers.error?.bind(handler);
+	}
+
+	public onHeartbeat(handler: () => void | Promise<void>) {
+		this.eventHandlers.heartbeat?.bind(handler);
 	}
 }
