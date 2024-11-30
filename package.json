@@ -15,6 +15,9 @@
     "type": "git",
     "url": "git+https://github.com/SeraphMC/reconnecting-websocket.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build"

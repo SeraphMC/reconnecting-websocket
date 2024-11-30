@@ -21,8 +21,8 @@ export enum ConnectionType {
 }
 
 export class ReconnectingWebSocket<
-	SendType extends Record<string, unknown> = Record<string, unknown>,
-	ReceiveType extends Record<string, unknown> = Record<string, unknown>
+	SendType extends Record<string, unknown>,
+	ReceiveType extends Record<string, unknown>
 > {
 	public readonly url: string;
 	public reconnectAttempts = 0;
@@ -44,10 +44,10 @@ export class ReconnectingWebSocket<
 
 	private readonly websocketOptions?: ClientOptions;
 
-	public onMessage?: (data: ReceiveType) => void;
-	public onOpen?: (reconnectAttempt: boolean) => void;
-	public onClose?: (forced: boolean) => void;
-	public onError?: (error: Error) => void;
+	public onMessage!: (data: ReceiveType) => void;
+	public onOpen!: (reconnectAttempt: boolean) => void;
+	public onClose!: (forced: boolean) => void;
+	public onError!: (error: Error) => void;
 
 	constructor(url: string, options: Partial<{
 		reconnectOptions: ReconnectingWebSocketOptions;
