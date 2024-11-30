@@ -21,8 +21,8 @@ export enum ConnectionType {
 }
 
 export class ReconnectingWebSocket<
-	SendType extends Record<string, unknown>,
-	ReceiveType extends Record<string, unknown>
+	SendType extends Record<string, unknown> = Record<string, unknown>,
+	ReceiveType extends Record<string, unknown> = Record<string, unknown>
 > {
 	public readonly url: string;
 	public reconnectAttempts = 0;
@@ -44,10 +44,12 @@ export class ReconnectingWebSocket<
 
 	private readonly websocketOptions?: ClientOptions;
 
-	public onMessage!: (data: ReceiveType) => void;
-	public onOpen!: (reconnectAttempt: boolean) => void;
-	public onClose!: (forced: boolean) => void;
-	public onError!: (error: Error) => void;
+	private eventHandlers: {
+		message?: (data: ReceiveType) => void | Promise<void>;
+		open?: (reconnectAttempt: boolean) => void;
+		close?: (forced: boolean) => void;
+		error?: (error: Error) => void;
+	} = {};
 
 	constructor(url: string, options: Partial<{
 		reconnectOptions: ReconnectingWebSocketOptions;
@@ -81,30 +83,24 @@ export class ReconnectingWebSocket<
 		this.reconnectAttempts = 0;
 
 		this.logDebug(`WebSocket connected: ${this.url} (reconnectAttempt: ${reconnectAttempt})`);
-		if (this.onOpen) {
-			this.onOpen(reconnectAttempt);
-		}
+		this.eventHandlers.open?.(reconnectAttempt);
 	}
 
 	private handleClose() {
 		const wasForced = this.forcedClose;
 		this.logDebug(`WebSocket closed: ${this.url}, forced: ${wasForced}`);
-		if (this.onClose) {
-			this.onClose(wasForced);
-		}
+		this.eventHandlers.close?.(wasForced);
 
 		if (!wasForced) {
 			this.reconnect();
 		}
 	}
 
-	private handleMessage(data: string | Buffer | ArrayBuffer | Buffer[]) {
+	private async handleMessage(data: string | Buffer | ArrayBuffer | Buffer[]) {
 		try {
 			const parsedData = JSON.parse(data.toString()) as ReceiveType;
 			this.logDebug("Message received:", parsedData);
-			if (this.onMessage) {
-				this.onMessage(parsedData);
-			}
+			await this.eventHandlers.message?.(parsedData);
 		} catch (error) {
 			this.logDebug("Error parsing message:", error, data);
 		}
@@ -112,9 +108,7 @@ export class ReconnectingWebSocket<
 
 	private handleError(error: Error) {
 		this.logDebug("WebSocket error:", error);
-		if (this.onError) {
-			this.onError(error);
-		}
+		this.eventHandlers.error?.(error);
 	}
 
 	private reconnect() {
@@ -156,5 +150,21 @@ export class ReconnectingWebSocket<
 	public close() {
 		this.forcedClose = true;
 		this.ws?.close();
+	}
+
+	public onMessage(handler: (data: ReceiveType) => void | Promise<void>) {
+		this.eventHandlers.message = handler;
+	}
+
+	public onOpen(handler: (reconnectAttempt: boolean) => void | Promise<void>) {
+		this.eventHandlers.open = handler;
+	}
+
+	public onClose(handler: (forced: boolean) => void | Promise<void>) {
+		this.eventHandlers.close = handler;
+	}
+
+	public onError(handler: (error: Error) => void | Promise<void>) {
+		this.eventHandlers.error = handler;
 	}
 }
