@@ -68,7 +68,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		close?: (forced: boolean) => void;
 		error?: (error: Error) => void;
 		heartbeat?: () => void;
-		unexpectedResponse?: (request:ClientRequest, response: IncomingMessage)=>void;
+		unexpectedResponse?: (request: ClientRequest, response: IncomingMessage) => void;
 	} = {};
 
 	constructor(
@@ -129,7 +129,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 
 	private async handleMessage(data: string | Buffer | ArrayBuffer | Buffer[]) {
 		try {
-			if (typeof data ==='string') {
+			if (typeof data === "string") {
 				const parsedData = JSON.parse(data) as ReceiveType;
 				this.logDebug("Message received:", parsedData);
 				await this.eventHandlers.message?.(parsedData);
@@ -165,7 +165,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		this.logDebug("Attempting to connect:", this.url);
 
 		if (this.ws) {
-			if (this.websocketOptions?.binaryType){
+			if (this.websocketOptions?.binaryType) {
 				this.ws.binaryType = this.websocketOptions?.binaryType;
 			}
 			this.ws.on("open", () => this.handleOpen(reconnectAttempt));
@@ -250,7 +250,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		this.eventHandlers.heartbeat?.bind(handler);
 	}
 
-	public onUnexpectedResponse(handler:typeof this.eventHandlers.unexpectedResponse){
-		this.eventHandlers.unexpectedResponse?.bind(handler)
+	public onUnexpectedResponse(handler: typeof this.eventHandlers.unexpectedResponse) {
+		this.eventHandlers.unexpectedResponse?.bind(handler);
 	}
 }
