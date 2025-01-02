@@ -16,10 +16,10 @@ type ReconnectingWebSocketOptions = Partial<{
 
 type WebsocketClientOptions = Partial<{ binaryType?: WebSocket["binaryType"]; } & ClientOptions>
 
-type HeartbeatOptions =
+type HeartbeatOptions<T> =
 	| {
 	enabled: true;
-	message: Record<string, unknown>;
+	message: T;
 	interval: number;
 }
 	| {
@@ -58,7 +58,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 	private readonly jsonStringifier?: (data: SendType) => string;
 
 	private readonly websocketOptions?: WebsocketClientOptions;
-	private readonly heartbeatOptions?: HeartbeatOptions;
+	private readonly heartbeatOptions?: HeartbeatOptions<SendType>;
 	private readonly queueOptions?: QueueOptions;
 
 	private eventHandlers: {
@@ -76,7 +76,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		options: Partial<{
 			reconnectOptions: ReconnectingWebSocketOptions;
 			websocketOptions: WebsocketClientOptions;
-			heartbeatOptions: HeartbeatOptions;
+			heartbeatOptions: HeartbeatOptions<SendType>;
 			queueOptions: QueueOptions;
 		}> = {},
 	) {
