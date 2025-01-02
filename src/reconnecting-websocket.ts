@@ -206,7 +206,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 		if (this.heartbeatOptions?.enabled == true) {
 			const { message, interval } = this.heartbeatOptions;
 			this.heartbeatInterval = setInterval(() => {
-				this.send(message as SendType);
+				this.send(message);
 			}, interval);
 		}
 	}
