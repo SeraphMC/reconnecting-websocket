@@ -57,9 +57,9 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 	private readonly maxReconnectAttempts: number | null;
 	private readonly jsonStringifier?: (data: SendType) => string;
 
-	private readonly websocketOptions?: WebsocketClientOptions;
-	private readonly heartbeatOptions?: HeartbeatOptions<SendType>;
-	private readonly queueOptions?: QueueOptions;
+	private readonly websocketOptions?: typeof this.options.websocketOptions;
+	private readonly heartbeatOptions?: typeof this.options.heartbeatOptions;
+	private readonly queueOptions?: typeof this.options.queueOptions;
 
 	private eventHandlers: {
 		message?: (data: ReceiveType) => void | Promise<void>;
@@ -73,7 +73,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 
 	constructor(
 		url: string,
-		options: Partial<{
+		private options: Partial<{
 			reconnectOptions: ReconnectingWebSocketOptions;
 			websocketOptions: WebsocketClientOptions;
 			heartbeatOptions: HeartbeatOptions<SendType>;
