@@ -1,5 +1,5 @@
-import { Logger } from "pino";
-import { ClientOptions } from "ws";
+import { type Logger } from "pino";
+import { type ClientOptions, WebSocket } from "ws";
 type ReconnectingWebSocketOptions = Partial<{
     debug?: boolean;
     automaticOpen?: boolean;
@@ -11,9 +11,12 @@ type ReconnectingWebSocketOptions = Partial<{
     logger?: Logger | Console;
     jsonStringifier?: (data: Record<string, unknown>) => string;
 }>;
-type HeartbeatOptions = {
+type WebsocketClientOptions = Partial<{
+    binaryType?: WebSocket["binaryType"];
+} & ClientOptions>;
+type HeartbeatOptions<T> = {
     enabled: true;
-    message: Record<string, unknown>;
+    message: T;
     interval: number;
 } | {
     enabled: false;
@@ -31,6 +34,7 @@ export declare enum ConnectionType {
     CLOSED
 }
 export declare class ReconnectingWebSocket<SendType extends Record<string, unknown> = Record<string, unknown>, ReceiveType extends Record<string, unknown> = Record<string, unknown>> {
+    private options;
     readonly url: string;
     reconnectAttempts: number;
     readyState: ConnectionType;
@@ -52,8 +56,8 @@ export declare class ReconnectingWebSocket<SendType extends Record<string, unkno
     private eventHandlers;
     constructor(url: string, options?: Partial<{
         reconnectOptions: ReconnectingWebSocketOptions;
-        websocketOptions: ClientOptions;
-        heartbeatOptions: HeartbeatOptions;
+        websocketOptions: WebsocketClientOptions;
+        heartbeatOptions: HeartbeatOptions<SendType>;
         queueOptions: QueueOptions;
     }>);
     private logDebug;
@@ -64,14 +68,17 @@ export declare class ReconnectingWebSocket<SendType extends Record<string, unkno
     private reconnect;
     open(reconnectAttempt: boolean): void;
     send(data: SendType): void;
+    sendBytes(bytes: Buffer | ArrayBuffer | ArrayBufferView): void;
     close(): void;
     private startHeartbeat;
     private stopHeartbeat;
     private releaseQueue;
-    onMessage(handler: (data: ReceiveType) => void | Promise<void>): void;
-    onOpen(handler: (reconnectAttempt: boolean) => void | Promise<void>): void;
-    onClose(handler: (forced: boolean) => void | Promise<void>): void;
-    onError(handler: (error: Error) => void | Promise<void>): void;
-    onHeartbeat(handler: () => void | Promise<void>): void;
+    onMessage(handler: typeof this.eventHandlers.message): void;
+    onMessageBinary(handler: typeof this.eventHandlers.messageBinary): void;
+    onOpen(handler: typeof this.eventHandlers.open): void;
+    onClose(handler: typeof this.eventHandlers.close): void;
+    onError(handler: typeof this.eventHandlers.error): void;
+    onHeartbeat(handler: typeof this.eventHandlers.heartbeat): void;
+    onUnexpectedResponse(handler: typeof this.eventHandlers.unexpectedResponse): void;
 }
 export {};

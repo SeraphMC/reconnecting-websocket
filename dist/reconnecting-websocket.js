@@ -18,6 +18,7 @@ export var ConnectionType;
 export class ReconnectingWebSocket {
     constructor(url, options = {}) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+        this.options = options;
         this.reconnectAttempts = 0;
         this.readyState = ConnectionType.CONNECTING;
         this.ws = null;
@@ -69,11 +70,16 @@ export class ReconnectingWebSocket {
     }
     handleMessage(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
+            var _a, _b, _c, _d;
             try {
-                const parsedData = JSON.parse(data.toString());
-                this.logDebug("Message received:", parsedData);
-                yield ((_b = (_a = this.eventHandlers).message) === null || _b === void 0 ? void 0 : _b.call(_a, parsedData));
+                if (typeof data === "string") {
+                    const parsedData = JSON.parse(data);
+                    this.logDebug("Message received:", parsedData);
+                    yield ((_b = (_a = this.eventHandlers).message) === null || _b === void 0 ? void 0 : _b.call(_a, parsedData));
+                }
+                else {
+                    yield ((_d = (_c = this.eventHandlers).messageBinary) === null || _d === void 0 ? void 0 : _d.call(_c, data));
+                }
             }
             catch (error) {
                 this.logDebug("Error parsing message:", error, data);
@@ -97,12 +103,19 @@ export class ReconnectingWebSocket {
         }, timeout);
     }
     open(reconnectAttempt) {
+        var _a, _b;
         this.ws = new WebSocket(this.url, this.websocketOptions);
         this.logDebug("Attempting to connect:", this.url);
-        this.ws.on("open", () => this.handleOpen(reconnectAttempt));
-        this.ws.on("close", () => this.handleClose());
-        this.ws.on("message", (data) => this.handleMessage(data));
-        this.ws.on("error", (error) => this.handleError(error));
+        if (this.ws) {
+            if ((_a = this.websocketOptions) === null || _a === void 0 ? void 0 : _a.binaryType) {
+                this.ws.binaryType = (_b = this.websocketOptions) === null || _b === void 0 ? void 0 : _b.binaryType;
+            }
+            this.ws.on("open", () => this.handleOpen(reconnectAttempt));
+            this.ws.on("close", () => this.handleClose());
+            this.ws.on("message", (data) => this.handleMessage(data));
+            this.ws.on("error", (error) => this.handleError(error));
+            this.ws.on("unexpected-response", (request, response) => { var _a, _b; return (_b = (_a = this.eventHandlers).unexpectedResponse) === null || _b === void 0 ? void 0 : _b.call(_a, request, response); });
+        }
     }
     send(data) {
         var _a;
@@ -111,9 +124,17 @@ export class ReconnectingWebSocket {
             this.ws.send(payload);
         }
         else {
-            if ((_a = this.queueOptions) === null || _a === void 0 ? void 0 : _a.enabled) {
+            if (((_a = this.queueOptions) === null || _a === void 0 ? void 0 : _a.enabled) && this.messageQueue.size < this.queueOptions.limit) {
                 this.messageQueue.add(data);
             }
+            throw new Error("WebSocket is not open. Unable to send message.");
+        }
+    }
+    sendBytes(bytes) {
+        if (this.ws && this.readyState === ConnectionType.OPEN) {
+            this.ws.send(bytes);
+        }
+        else {
             throw new Error("WebSocket is not open. Unable to send message.");
         }
     }
@@ -150,6 +171,10 @@ export class ReconnectingWebSocket {
         var _a;
         (_a = this.eventHandlers.message) === null || _a === void 0 ? void 0 : _a.bind(handler);
     }
+    onMessageBinary(handler) {
+        var _a;
+        (_a = this.eventHandlers.messageBinary) === null || _a === void 0 ? void 0 : _a.bind(handler);
+    }
     onOpen(handler) {
         var _a;
         (_a = this.eventHandlers.open) === null || _a === void 0 ? void 0 : _a.bind(handler);
@@ -165,5 +190,9 @@ export class ReconnectingWebSocket {
     onHeartbeat(handler) {
         var _a;
         (_a = this.eventHandlers.heartbeat) === null || _a === void 0 ? void 0 : _a.bind(handler);
+    }
+    onUnexpectedResponse(handler) {
+        var _a;
+        (_a = this.eventHandlers.unexpectedResponse) === null || _a === void 0 ? void 0 : _a.bind(handler);
     }
 }
