@@ -1,5 +1,5 @@
-import { Logger } from "pino";
-import { ClientOptions, WebSocket } from "ws";
+import { type Logger } from "pino";
+import { type ClientOptions, WebSocket } from "ws";
 import { ClientRequest, IncomingMessage } from "http";
 
 type ReconnectingWebSocketOptions = Partial<{
