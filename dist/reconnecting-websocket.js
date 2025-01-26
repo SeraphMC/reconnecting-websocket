@@ -70,15 +70,16 @@ export class ReconnectingWebSocket {
     }
     handleMessage(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e, _f;
             try {
+                (_b = (_a = this.eventHandlers).rawMessage) === null || _b === void 0 ? void 0 : _b.call(_a, data);
                 if (typeof data === "string") {
                     const parsedData = JSON.parse(data);
                     this.logDebug("Message received:", parsedData);
-                    yield ((_b = (_a = this.eventHandlers).message) === null || _b === void 0 ? void 0 : _b.call(_a, parsedData));
+                    yield ((_d = (_c = this.eventHandlers).message) === null || _d === void 0 ? void 0 : _d.call(_c, parsedData));
                 }
                 else {
-                    yield ((_d = (_c = this.eventHandlers).messageBinary) === null || _d === void 0 ? void 0 : _d.call(_c, data));
+                    yield ((_f = (_e = this.eventHandlers).messageBinary) === null || _f === void 0 ? void 0 : _f.call(_e, data));
                 }
             }
             catch (error) {
@@ -166,6 +167,10 @@ export class ReconnectingWebSocket {
                 this.send(message);
             }
         }
+    }
+    onRawMessage(handler) {
+        var _a;
+        (_a = this.eventHandlers.rawMessage) === null || _a === void 0 ? void 0 : _a.bind(handler);
     }
     onMessage(handler) {
         var _a;

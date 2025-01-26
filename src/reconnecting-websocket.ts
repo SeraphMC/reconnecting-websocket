@@ -64,6 +64,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 	private eventHandlers: {
 		message?: (data: ReceiveType) => void | Promise<void>;
 		messageBinary?: (data: Buffer | ArrayBuffer | Buffer[]) => void | Promise<void>
+		rawMessage?: (data: string | Buffer | ArrayBuffer | Buffer[]) => void | Promise<void>
 		open?: (reconnectAttempt: boolean) => void;
 		close?: (forced: boolean) => void;
 		error?: (error: Error) => void;
@@ -129,6 +130,7 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 
 	private async handleMessage(data: string | Buffer | ArrayBuffer | Buffer[]) {
 		try {
+			this.eventHandlers.rawMessage?.(data);
 			if (typeof data === "string") {
 				const parsedData = JSON.parse(data) as ReceiveType;
 				this.logDebug("Message received:", parsedData);
@@ -224,6 +226,10 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 				this.send(message);
 			}
 		}
+	}
+
+	public onRawMessage(handler: typeof this.eventHandlers.rawMessage) {
+		this.eventHandlers.rawMessage?.bind(handler);
 	}
 
 	public onMessage(handler: typeof this.eventHandlers.message) {

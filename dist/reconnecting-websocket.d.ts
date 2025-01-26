@@ -73,6 +73,7 @@ export declare class ReconnectingWebSocket<SendType extends Record<string, unkno
     private startHeartbeat;
     private stopHeartbeat;
     private releaseQueue;
+    onRawMessage(handler: typeof this.eventHandlers.rawMessage): void;
     onMessage(handler: typeof this.eventHandlers.message): void;
     onMessageBinary(handler: typeof this.eventHandlers.messageBinary): void;
     onOpen(handler: typeof this.eventHandlers.open): void;
