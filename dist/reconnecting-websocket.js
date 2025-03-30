@@ -169,35 +169,27 @@ export class ReconnectingWebSocket {
         }
     }
     onRawMessage(handler) {
-        var _a;
-        (_a = this.eventHandlers.rawMessage) === null || _a === void 0 ? void 0 : _a.bind(handler);
+        this.eventHandlers.rawMessage = handler;
     }
     onMessage(handler) {
-        var _a;
-        (_a = this.eventHandlers.message) === null || _a === void 0 ? void 0 : _a.bind(handler);
+        this.eventHandlers.message = handler;
     }
     onMessageBinary(handler) {
-        var _a;
-        (_a = this.eventHandlers.messageBinary) === null || _a === void 0 ? void 0 : _a.bind(handler);
+        this.eventHandlers.messageBinary = handler;
     }
     onOpen(handler) {
-        var _a;
-        (_a = this.eventHandlers.open) === null || _a === void 0 ? void 0 : _a.bind(handler);
+        this.eventHandlers.open = handler;
     }
     onClose(handler) {
-        var _a;
-        (_a = this.eventHandlers.close) === null || _a === void 0 ? void 0 : _a.bind(handler);
+        this.eventHandlers.close = handler;
     }
     onError(handler) {
-        var _a;
-        (_a = this.eventHandlers.error) === null || _a === void 0 ? void 0 : _a.bind(handler);
+        this.eventHandlers.error = handler;
     }
     onHeartbeat(handler) {
-        var _a;
-        (_a = this.eventHandlers.heartbeat) === null || _a === void 0 ? void 0 : _a.bind(handler);
+        this.eventHandlers.heartbeat = handler;
     }
     onUnexpectedResponse(handler) {
-        var _a;
-        (_a = this.eventHandlers.unexpectedResponse) === null || _a === void 0 ? void 0 : _a.bind(handler);
+        this.eventHandlers.unexpectedResponse = handler;
     }
 }
