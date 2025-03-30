@@ -14,22 +14,24 @@ type ReconnectingWebSocketOptions = Partial<{
 	jsonStringifier?: (data: Record<string, unknown>) => string;
 }>;
 
-type WebsocketClientOptions = Partial<{ binaryType?: WebSocket["binaryType"]; } & ClientOptions>
+type WebsocketClientOptions = Partial<{ binaryType?: WebSocket["binaryType"] } & ClientOptions>;
 
 type HeartbeatOptions<T> =
 	| {
-	enabled: true;
-	message: T;
-	interval: number;
-}
+			enabled: true;
+			message: T;
+			interval: number;
+	  }
 	| {
-	enabled: false;
-};
+			enabled: false;
+	  };
 
-type QueueOptions = {
-	enabled: true;
-	limit: number;
-} | { enabled: false };
+type QueueOptions =
+	| {
+			enabled: true;
+			limit: number;
+	  }
+	| { enabled: false };
 
 export enum ConnectionType {
 	CONNECTING = WebSocket.CONNECTING,
@@ -63,8 +65,8 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 
 	private eventHandlers: {
 		message?: (data: ReceiveType) => void | Promise<void>;
-		messageBinary?: (data: Buffer | ArrayBuffer | Buffer[]) => void | Promise<void>
-		rawMessage?: (data: string | Buffer | ArrayBuffer | Buffer[]) => void | Promise<void>
+		messageBinary?: (data: Buffer | ArrayBuffer | Buffer[]) => void | Promise<void>;
+		rawMessage?: (data: string | Buffer | ArrayBuffer | Buffer[]) => void | Promise<void>;
 		open?: (reconnectAttempt: boolean) => void;
 		close?: (forced: boolean) => void;
 		error?: (error: Error) => void;
@@ -229,34 +231,34 @@ export class ReconnectingWebSocket<SendType extends Record<string, unknown> = Re
 	}
 
 	public onRawMessage(handler: typeof this.eventHandlers.rawMessage) {
-		this.eventHandlers.rawMessage?.bind(handler);
+		this.eventHandlers.rawMessage = handler;
 	}
 
 	public onMessage(handler: typeof this.eventHandlers.message) {
-		this.eventHandlers.message?.bind(handler);
+		this.eventHandlers.message = handler;
 	}
 
 	public onMessageBinary(handler: typeof this.eventHandlers.messageBinary) {
-		this.eventHandlers.messageBinary?.bind(handler);
+		this.eventHandlers.messageBinary = handler;
 	}
 
 	public onOpen(handler: typeof this.eventHandlers.open) {
-		this.eventHandlers.open?.bind(handler);
+		this.eventHandlers.open = handler;
 	}
 
 	public onClose(handler: typeof this.eventHandlers.close) {
-		this.eventHandlers.close?.bind(handler);
+		this.eventHandlers.close = handler;
 	}
 
 	public onError(handler: typeof this.eventHandlers.error) {
-		this.eventHandlers.error?.bind(handler);
+		this.eventHandlers.error = handler;
 	}
 
 	public onHeartbeat(handler: typeof this.eventHandlers.heartbeat) {
-		this.eventHandlers.heartbeat?.bind(handler);
+		this.eventHandlers.heartbeat = handler;
 	}
 
 	public onUnexpectedResponse(handler: typeof this.eventHandlers.unexpectedResponse) {
-		this.eventHandlers.unexpectedResponse?.bind(handler);
+		this.eventHandlers.unexpectedResponse = handler;
 	}
 }
