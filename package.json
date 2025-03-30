@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "description": "A reconnecting websocket with typescript support",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/reconnecting-websocket.js",
+  "types": "dist/reconnecting-websocket.d.ts",
   "author": "Clemintina",
   "license": "LGPL-3.0-only",
+  "files": ["dist", "README.md", "LICENSE"],
   "bugs": {
     "url": "https://github.com/SeraphMC/reconnecting-websocket/issues"
   },
